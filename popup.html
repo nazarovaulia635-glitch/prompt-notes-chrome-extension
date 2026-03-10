@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prompt Keeper</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #f4f6fb;
+      --panel: rgba(255, 255, 255, 0.9);
+      --panel-solid: #ffffff;
+      --text: #1b1f2a;
+      --muted: #6f7787;
+      --line: rgba(25, 35, 60, 0.08);
+      --shadow: 0 10px 30px rgba(20, 28, 45, 0.08);
+      --shadow-soft: 0 4px 14px rgba(20, 28, 45, 0.06);
+      --accent: #3b82f6;
+      --accent-dark: #2563eb;
+      --danger: #ef4444;
+      --note: #8b5cf6;
+    }
+
+    body {
+      margin: 0;
+      width: 430px;
+      min-height: 590px;
+      font-family: Inter, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(59,130,246,0.08), transparent 30%),
+        radial-gradient(circle at top right, rgba(139,92,246,0.08), transparent 28%),
+        var(--bg);
+      color: var(--text);
+    }
+
+    .app {
+      padding: 16px;
+    }
+
+    .top {
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.55);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .title-box {
+      min-width: 0;
+    }
+
+    .title {
+      margin: 0 0 6px;
+      font-size: 20px;
+      line-height: 1.2;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.4;
+      color: var(--muted);
+    }
+
+    .add-btn {
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      color: #fff;
+      font-size: 26px;
+      line-height: 1;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(37, 99, 235, 0.25);
+      transition: transform 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .add-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .stat-card {
+      min-width: 0;
+      background: rgba(255,255,255,0.75);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px 14px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+
+    .notice {
+      min-height: 18px;
+      font-size: 12px;
+      color: var(--muted);
+      margin: 2px 2px 12px;
+    }
+
+    .form-box {
+      display: none;
+      background: var(--panel-solid);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 14px;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow);
+    }
+
+    .form-box.show {
+      display: block;
+    }
+
+    .field {
+      margin-bottom: 12px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 7px;
+      font-weight: 600;
+    }
+
+    .field input,
+    .field textarea,
+    .field select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 13px;
+      font: inherit;
+      color: var(--text);
+      background: #fbfcff;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .field input:focus,
+    .field textarea:focus,
+    .field select:focus {
+      border-color: rgba(59,130,246,0.45);
+      box-shadow: 0 0 0 4px rgba(59,130,246,0.10);
+    }
+
+    .field textarea {
+      min-height: 140px;
+      resize: vertical;
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font: inherit;
+      cursor: pointer;
+      background: #eef2f8;
+      color: var(--text);
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    button.primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      color: #fff;
+    }
+
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.94);
+      border: 1px solid rgba(25, 35, 60, 0.08);
+      border-radius: 20px;
+      padding: 14px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .card-title-wrap {
+      min-width: 0;
+    }
+
+    .card-title {
+      margin: 0 0 8px;
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.35;
+      letter-spacing: -0.01em;
+      word-break: break-word;
+    }
+
+    .type-badge {
+      display: inline-flex;
+      align-items: center;
+      font-size: 11px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: rgba(59,130,246,0.10);
+      color: var(--accent-dark);
+    }
+
+    .type-badge.note {
+      background: rgba(139,92,246,0.12);
+      color: #6d28d9;
+    }
+
+    .badge {
+      font-size: 11px;
+      color: var(--accent-dark);
+      background: rgba(59,130,246,0.10);
+      border-radius: 999px;
+      padding: 6px 9px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .preview {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #394150;
+      background: #f8faff;
+      border: 1px solid rgba(25, 35, 60, 0.06);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 12px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 132px;
+      overflow: auto;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .actions button {
+      background: #f1f5fb;
+      padding: 9px 12px;
+    }
+
+    .actions .delete-btn {
+      background: rgba(239, 68, 68, 0.10);
+      color: #b91c1c;
+    }
+
+    .empty {
+      background: rgba(255,255,255,0.92);
+      border: 1px dashed rgba(25, 35, 60, 0.14);
+      border-radius: 22px;
+      padding: 24px 18px;
+      text-align: center;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .empty-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0 0 8px;
+      letter-spacing: -0.02em;
+    }
+
+    .empty-text {
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--muted);
+      margin: 0 0 14px;
+    }
+
+    .empty-add-btn {
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 12px;
+    }
+
+    .confirm-box {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 16px;
+      background: #fff6f6;
+      border: 1px solid rgba(239, 68, 68, 0.16);
+    }
+
+    .confirm-text {
+      font-size: 13px;
+      line-height: 1.45;
+      color: #7f1d1d;
+      margin-bottom: 10px;
+    }
+
+    .confirm-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .confirm-actions .danger {
+      background: var(--danger);
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="top">
+      <div class="header">
+        <div class="title-box">
+          <h1 class="title">Мои промпты и заметки</h1>
+          <p class="subtitle">Сохраняй тексты, быстро копируй и редактируй без лишних действий.</p>
+        </div>
+        <button id="openFormBtn" class="add-btn" title="Добавить">+</button>
+      </div>
+
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-label">Всего</div>
+          <div id="totalCount" class="stat-value">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Промпты</div>
+          <div id="promptCount" class="stat-value">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Заметки</div>
+          <div id="noteCount" class="stat-value">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="notice" class="notice"></div>
+
+    <div id="formBox" class="form-box">
+      <div class="field">
+        <label for="entryType">Тип записи</label>
+        <select id="entryType">
+          <option value="prompt">Промпт</option>
+          <option value="note">Заметка</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="promptTitle">Название</label>
+        <input id="promptTitle" type="text" placeholder="Например: Промпт для статьи">
+      </div>
+
+      <div class="field">
+        <label for="promptText">Текст</label>
+        <textarea id="promptText" placeholder="Напиши или вставь сюда текст"></textarea>
+      </div>
+
+      <div class="form-actions">
+        <button id="cancelBtn" type="button">Отмена</button>
+        <button id="saveBtn" type="button" class="primary">Сохранить</button>
+      </div>
+    </div>
+
+    <div id="promptList" class="list"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
